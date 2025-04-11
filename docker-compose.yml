@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+    network_mode: "host"
+    container_name: uwi
+    restart: always
+    ports:
+      - "8888:8888"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-key_here}  # Default secret key if not provided
