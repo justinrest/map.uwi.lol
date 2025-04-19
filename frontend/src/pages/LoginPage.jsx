@@ -34,7 +34,7 @@ const LoginPage = () => {
   return (
     <div className="flex justify-center items-center bg-gray-50 min-h-[calc(100vh-64px)]">
       <div className="bg-white shadow-md p-6 rounded-lg w-full max-w-md">
-        <h1 className="mb-6 font-bold text-2xl text-center">Login to UWI Map</h1>
+        <h1 className="mb-6 font-bold text-2xl text-center">Login to Find D Lime</h1>
         
         {formError && (
           <div className="bg-red-50 mb-4 p-3 rounded-lg text-red-600">

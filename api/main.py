@@ -14,7 +14,7 @@ import categories as categories_dao
 import places as places_dao
 import interactions as interactions_dao
 
-app = FastAPI(title="UWI Map API")
+app = FastAPI(title="Find D Lime")
 
 # Configure CORS
 app.add_middleware(
@@ -86,6 +86,8 @@ async def read_categories(
     return categories
 
 # Place endpoints
+# Update these in main.py
+
 @app.post("/api/places/")
 async def create_place(
     place: schemas.PlaceCreate, 
@@ -98,12 +100,37 @@ async def create_place(
         description=place.description,
         latitude=place.latitude,
         longitude=place.longitude,
-        category_id=place.category_id,
+        category_ids=place.category_ids,  # Changed from category_id
         user_id=current_user["id"],
         osm_id=place.osm_id,
         is_osm_imported=place.is_osm_imported,
         osm_tags=place.osm_tags
     )
+
+@app.put("/api/places/{place_id}")
+async def update_place(
+    place_id: int,
+    place_update: schemas.PlaceUpdate,
+    conn: asyncpg.Connection = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a place's details (if it belongs to the current user)."""
+    updated_place = await places_dao.update_place(
+        conn=conn,
+        place_id=place_id,
+        user_id=current_user["id"],
+        name=place_update.name,
+        description=place_update.description,
+        category_ids=place_update.category_ids  # Changed from category_id
+    )
+    
+    if not updated_place:
+        raise HTTPException(
+            status_code=404,
+            detail="Place not found or you don't have permission to modify it"
+        )
+    
+    return updated_place
 
 @app.get("/api/places/")
 async def read_places(
@@ -218,31 +245,6 @@ async def get_my_places(
         skip=skip,
         limit=limit
     )
-
-@app.put("/api/places/{place_id}")
-async def update_place(
-    place_id: int,
-    place_update: schemas.PlaceUpdate,
-    conn: asyncpg.Connection = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    """Update a place's details (if it belongs to the current user)."""
-    updated_place = await places_dao.update_place(
-        conn=conn,
-        place_id=place_id,
-        user_id=current_user["id"],
-        name=place_update.name,
-        description=place_update.description,
-        category_id=place_update.category_id
-    )
-    
-    if not updated_place:
-        raise HTTPException(
-            status_code=404,
-            detail="Place not found or you don't have permission to modify it"
-        )
-    
-    return updated_place
 
 @app.delete("/api/places/{place_id}")
 async def delete_place(

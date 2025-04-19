@@ -13,12 +13,12 @@ const HomePage = () => {
   return (
     <div className="flex flex-col lg:flex-row h-full">
       {/* Main map area */}
-      <div className="lg:w-3/4 h-[70vh] lg:h-[calc(100vh-64px)]">
+      <div className="lg:w-4/6 h-[70vh] lg:h-[calc(100vh-64px)]">
         <MapView />
       </div>
       
       {/* Feed sidebar */}
-      <div className="lg:w-1/4 p-4 bg-white shadow-md overflow-y-auto h-full lg:h-[calc(100vh-64px)]">
+      <div className="lg:w-2/6 p-4 bg-white shadow-md overflow-y-auto h-full lg:h-[calc(100vh-64px)]">
         <FeedSection />
       </div>
     </div>

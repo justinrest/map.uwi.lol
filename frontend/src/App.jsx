@@ -37,7 +37,7 @@ function App() {
           </Routes>
         </main>
         <footer className="bg-gray-800 p-4 text-white text-center">
-          <p>© 2025 UWI Map - Made with ❤️ for UWI Students</p>
+          <p>© 2025 Find D Lime</p>
         </footer>
       </div>
     </MapProvider>

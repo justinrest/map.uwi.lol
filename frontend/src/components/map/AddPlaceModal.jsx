@@ -13,7 +13,7 @@ const AddPlaceModal = ({
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category_id: '',
+    category_ids: [],  // Changed from category_id to category_ids array
     latitude: location?.lat || 0,
     longitude: location?.lng || 0,
     osm_id: null,
@@ -35,28 +35,50 @@ const AddPlaceModal = ({
 
   useEffect(() => {
     // Set default category if available
-    if (categories && categories.length > 0 && !formData.category_id) {
+    if (categories && categories.length > 0 && formData.category_ids.length === 0) {
       setFormData(prev => ({
         ...prev,
-        category_id: categories[0].id
+        category_ids: [categories[0].id]
       }));
     }
-  }, [categories, formData.category_id]);
+  }, [categories, formData.category_ids]);
 
   useEffect(() => {
     // Use initialData if provided
     if (initialData) {
-      setFormData(initialData);
+      // Convert category_id to category_ids array if needed
+      const updatedData = { ...initialData };
+      if (initialData.category_id && !initialData.category_ids) {
+        updatedData.category_ids = [initialData.category_id];
+        delete updatedData.category_id;
+      }
+      setFormData(updatedData);
       setUsingOsmData(initialData.is_osm_imported);
     }
   }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'category_id' ? parseInt(value, 10) : value
-    }));
+    
+    if (name === 'category_ids') {
+      // Handle multiple select for categories
+      const options = e.target.options;
+      const selectedValues = [];
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          selectedValues.push(parseInt(options[i].value, 10));
+        }
+      }
+      setFormData(prev => ({
+        ...prev,
+        [name]: selectedValues
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'category_id' ? parseInt(value, 10) : value
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -70,8 +92,8 @@ const AddPlaceModal = ({
       return false;
     }
     
-    if (!formData.category_id) {
-      setError('Please select a category');
+    if (formData.category_ids.length === 0) {
+      setError('Please select at least one category');
       return false;
     }
     
@@ -95,6 +117,27 @@ const AddPlaceModal = ({
     }
   };
 
+  // Helper function to toggle category selection
+  const toggleCategory = (categoryId) => {
+    setFormData(prev => {
+      const categoryIds = [...prev.category_ids];
+      const index = categoryIds.indexOf(categoryId);
+      
+      if (index === -1) {
+        // Add category
+        categoryIds.push(categoryId);
+      } else {
+        // Remove category
+        categoryIds.splice(index, 1);
+      }
+      
+      return {
+        ...prev,
+        category_ids: categoryIds
+      };
+    });
+  };
+
   if (!show) return null;
 
   return (
@@ -114,7 +157,6 @@ const AddPlaceModal = ({
           
           {locationInfo && (
             <div className="bg-blue-50 mb-4 p-3 rounded-lg">
-              
               {locationInfo.name && (
                 <p className="mt-1 text-sm">Existing Place Imported: <span className="font-medium">{locationInfo.name}</span></p>
               )}
@@ -143,22 +185,30 @@ const AddPlaceModal = ({
             </div>
             
             <div className="mb-4">
-              <label htmlFor="category_id" className="block mb-2 text-gray-700">Category</label>
-              <select
-                id="category_id"
-                name="category_id"
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                value={formData.category_id}
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="">Select a category</option>
+              <label className="block mb-2 text-gray-700">Categories (Select multiple)</label>
+              <div className="max-h-48 overflow-y-auto border rounded-lg px-3 py-2">
                 {categories && categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
+                  <div key={category.id} className="py-1">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-5 w-5 text-blue-600"
+                        checked={formData.category_ids.includes(category.id)}
+                        onChange={() => toggleCategory(category.id)}
+                        disabled={loading}
+                      />
+                      <span 
+                        className="inline-block w-4 h-4 rounded-full"
+                        style={{ backgroundColor: category.color }}
+                      ></span>
+                      <span>{category.name}</span>
+                    </label>
+                  </div>
                 ))}
-              </select>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Hold Ctrl/Cmd to select multiple categories
+              </p>
             </div>
             
             <div className="mb-4">

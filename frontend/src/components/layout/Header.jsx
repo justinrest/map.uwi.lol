@@ -17,7 +17,7 @@ const Header = () => {
       <div className="mx-auto px-4 container">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center">
-            <span className="font-bold text-blue-600 text-xl">UWI Map</span>
+            <span className="font-bold text-blue-600 text-xl">Find D Lime</span>
           </Link>
 
           <nav>

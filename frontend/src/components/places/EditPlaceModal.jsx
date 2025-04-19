@@ -6,17 +6,20 @@ const EditPlaceModal = ({ show, place, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category_id: ''
+    category_ids: []  // Changed from category_id to category_ids array
   });
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (place) {
+      // Convert categories array to category_ids array
+      const categoryIds = place.categories ? place.categories.map(cat => cat.id) : [];
+      
       setFormData({
         name: place.name || '',
         description: place.description || '',
-        category_id: place.category_id || ''
+        category_ids: categoryIds
       });
     }
     
@@ -33,12 +36,25 @@ const EditPlaceModal = ({ show, place, onClose, onSave }) => {
     loadCategories();
   }, [place, fetchCategories]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'category_id' ? (value ? parseInt(value, 10) : '') : value
-    }));
+  // Helper function to toggle category selection
+  const toggleCategory = (categoryId) => {
+    setFormData(prev => {
+      const categoryIds = [...prev.category_ids];
+      const index = categoryIds.indexOf(categoryId);
+      
+      if (index === -1) {
+        // Add category
+        categoryIds.push(categoryId);
+      } else {
+        // Remove category
+        categoryIds.splice(index, 1);
+      }
+      
+      return {
+        ...prev,
+        category_ids: categoryIds
+      };
+    });
   };
 
   const validateForm = () => {
@@ -52,8 +68,8 @@ const EditPlaceModal = ({ show, place, onClose, onSave }) => {
       return false;
     }
     
-    if (!formData.category_id) {
-      setError('Please select a category');
+    if (formData.category_ids.length === 0) {
+      setError('Please select at least one category');
       return false;
     }
     
@@ -109,28 +125,36 @@ const EditPlaceModal = ({ show, place, onClose, onSave }) => {
                 name="name"
                 className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={formData.name}
-                onChange={handleChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 disabled={loading}
               />
             </div>
             
             <div className="mb-4">
-              <label htmlFor="category_id" className="block mb-2 text-gray-700">Category</label>
-              <select
-                id="category_id"
-                name="category_id"
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                value={formData.category_id}
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="">Select a category</option>
+              <label className="block mb-2 text-gray-700">Categories (Select multiple)</label>
+              <div className="max-h-48 overflow-y-auto border rounded-lg px-3 py-2">
                 {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
+                  <div key={category.id} className="py-1">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-5 w-5 text-blue-600"
+                        checked={formData.category_ids.includes(category.id)}
+                        onChange={() => toggleCategory(category.id)}
+                        disabled={loading}
+                      />
+                      <span 
+                        className="inline-block w-4 h-4 rounded-full"
+                        style={{ backgroundColor: category.color }}
+                      ></span>
+                      <span>{category.name}</span>
+                    </label>
+                  </div>
                 ))}
-              </select>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                You can select multiple categories
+              </p>
             </div>
             
             <div className="mb-4">
@@ -141,7 +165,7 @@ const EditPlaceModal = ({ show, place, onClose, onSave }) => {
                 rows="4"
                 className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={formData.description}
-                onChange={handleChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 disabled={loading}
               ></textarea>
             </div>
